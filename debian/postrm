@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+# Deregister nu from /etc/shells when the package is removed. Guarded because
+# remove-shell (debianutils) may be unavailable during late purge.
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+    if command -v remove-shell >/dev/null 2>&1; then
+        remove-shell /usr/bin/nu /bin/nu
+    fi
+fi
+
+#DEBHELPER#
+
+exit 0

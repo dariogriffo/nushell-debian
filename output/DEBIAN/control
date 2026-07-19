@@ -1,0 +1,8 @@
+Section: shells
+Priority: optional
+Maintainer: Dario Griffo <dariogriffo@gmail.com>
+Homepage: https://www.nushell.sh
+Package: nushell
+Version: nushell_VERSION-BUILD_VERSION~DIST
+Architecture: SUPPORTED_ARCHITECTURES
+Description: A new type of shell operating on structured data.

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+# Register nu as a valid login shell so users can `chsh -s /usr/bin/nu`.
+# Both paths are registered (usr-merged systems resolve /bin/nu too), matching
+# what Debian's own shell packages (zsh, fish) do.
+if [ "$1" = "configure" ]; then
+    add-shell /usr/bin/nu /bin/nu
+fi
+
+#DEBHELPER#
+
+exit 0

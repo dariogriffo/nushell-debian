@@ -1,0 +1,17 @@
+Source: nushell
+Section: shells
+Priority: optional
+Maintainer: Dario Griffo <dariogriffo@gmail.com>
+Build-Depends: debhelper-compat (= 13), wget, ca-certificates
+Standards-Version: 4.6.2
+Homepage: https://www.nushell.sh
+Rules-Requires-Root: no
+
+Package: nushell
+Architecture: amd64 arm64 armhf riscv64
+Depends: ${misc:Depends}
+Description: modern shell operating on structured data
+ Nushell (nu) is a new type of shell: pipelines carry structured, typed data
+ instead of raw text, with first-class support for JSON, YAML, CSV, TOML,
+ SQLite and more. Includes the official plugins (formats, gstat, inc, polars,
+ query) and registers nu in /etc/shells so it can be used as a login shell.

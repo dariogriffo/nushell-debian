@@ -1,0 +1,42 @@
+#!/usr/bin/make -f
+DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
+NU_VERSION := $(shell dpkg-parsechangelog -S Version | sed 's/[-~].*//')
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	@arch="$(DEB_HOST_ARCH)"; \
+	case "$$arch" in \
+		amd64)   NU_RELEASE="nu-$(NU_VERSION)-x86_64-unknown-linux-musl" ;; \
+		arm64)   NU_RELEASE="nu-$(NU_VERSION)-aarch64-unknown-linux-musl" ;; \
+		armhf)   NU_RELEASE="nu-$(NU_VERSION)-armv7-unknown-linux-musleabihf" ;; \
+		riscv64) NU_RELEASE="nu-$(NU_VERSION)-riscv64gc-unknown-linux-gnu" ;; \
+		*) echo "Unsupported architecture: $$arch"; exit 1 ;; \
+	esac; \
+	echo "Downloading $$NU_RELEASE for $(NU_VERSION)..."; \
+	wget -q "https://github.com/nushell/nushell/releases/download/$(NU_VERSION)/$$NU_RELEASE.tar.gz"; \
+	tar -xf "$$NU_RELEASE.tar.gz"; \
+	rm -f "$$NU_RELEASE.tar.gz"; \
+	echo "$$NU_RELEASE" > .nu_release_name
+
+override_dh_auto_install:
+	@NU_RELEASE=$$(cat .nu_release_name); \
+	install -D -m 755 "$$NU_RELEASE/nu" debian/nushell/usr/bin/nu; \
+	for plugin in formats gstat inc polars query; do \
+		install -D -m 755 "$$NU_RELEASE/nu_plugin_$$plugin" "debian/nushell/usr/bin/nu_plugin_$$plugin"; \
+	done
+
+override_dh_auto_test:
+
+override_dh_auto_clean:
+	@if [ -f .nu_release_name ]; then \
+		NU_RELEASE=$$(cat .nu_release_name); \
+		rm -rf "$$NU_RELEASE" .nu_release_name || true; \
+	fi
+
+override_dh_strip:
+
+override_dh_shlibdeps:
