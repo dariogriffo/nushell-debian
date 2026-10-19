@@ -72,40 +72,34 @@ build_architecture() {
           "$nu_release/nu_plugin_custom_values" \
           "$nu_release/nu_plugin_stress_internals"
 
-    # Build packages for appropriate Debian distributions
-    # riscv64 is only supported in trixie (v13) and later, not in bookworm (v12)
-    if [ "$build_arch" = "riscv64" ]; then
-        declare -a arr=("trixie" "forky" "sid")
-    else
-        declare -a arr=("bookworm" "trixie" "forky" "sid")
+    # riscv64 is only an architecture of trixie and noble onwards; the mirror
+    # keeps it out of bookworm and jammy (EXCLUDE in update_nushell.sh).
+    # One package for every suite: upstream ships one binary per architecture,
+    # so only the old ~<suite> version suffix ever differed. The fixed ~griffo
+    # keeps it below the distro's own build of the same version.
+    FULL_VERSION="$nushell_VERSION-${BUILD_VERSION}~griffo_${build_arch}"
+    echo "  Building $FULL_VERSION"
+
+    if ! docker build . -t "nushell-$build_arch" \
+        --build-arg nushell_VERSION="$nushell_VERSION" \
+        --build-arg BUILD_VERSION="$BUILD_VERSION" \
+        --build-arg FULL_VERSION="$FULL_VERSION" \
+        --build-arg ARCH="$build_arch" \
+        --build-arg NU_RELEASE="$nu_release"; then
+        echo "❌ Failed to build Docker image for $build_arch"
+        return 1
     fi
 
-    for dist in "${arr[@]}"; do
-        FULL_VERSION="$nushell_VERSION-${BUILD_VERSION}~${dist}_${build_arch}"
-        echo "  Building $FULL_VERSION"
+    id="$(docker create "nushell-$build_arch")"
+    if ! docker cp "$id:/nushell_$FULL_VERSION.deb" - > "./nushell_$FULL_VERSION.deb"; then
+        echo "❌ Failed to extract .deb package for $build_arch"
+        return 1
+    fi
 
-        if ! docker build . -t "nushell-$dist-$build_arch" \
-            --build-arg DEBIAN_DIST="$dist" \
-            --build-arg nushell_VERSION="$nushell_VERSION" \
-            --build-arg BUILD_VERSION="$BUILD_VERSION" \
-            --build-arg FULL_VERSION="$FULL_VERSION" \
-            --build-arg ARCH="$build_arch" \
-            --build-arg NU_RELEASE="$nu_release"; then
-            echo "❌ Failed to build Docker image for $dist on $build_arch"
-            return 1
-        fi
-
-        id="$(docker create "nushell-$dist-$build_arch")"
-        if ! docker cp "$id:/nushell_$FULL_VERSION.deb" - > "./nushell_$FULL_VERSION.deb"; then
-            echo "❌ Failed to extract .deb package for $dist on $build_arch"
-            return 1
-        fi
-
-        if ! tar -xf "./nushell_$FULL_VERSION.deb"; then
-            echo "❌ Failed to extract .deb contents for $dist on $build_arch"
-            return 1
-        fi
-    done
+    if ! tar -xf "./nushell_$FULL_VERSION.deb"; then
+        echo "❌ Failed to extract .deb contents for $build_arch"
+        return 1
+    fi
 
     # Clean up extracted directory
     rm -rf "$nu_release" || true

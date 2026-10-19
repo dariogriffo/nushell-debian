@@ -14,7 +14,7 @@ PACKAGE_NAME="nushell"
 ORIG_TARBALL="${PACKAGE_NAME}_${nushell_VERSION}.orig.tar.gz"
 BUILD_DIR="${PACKAGE_NAME}-${nushell_VERSION}"
 
-echo "Creating Debian/Ubuntu source packages for nushell ${nushell_VERSION}-${BUILD_VERSION}..."
+echo "Creating the source package for nushell ${nushell_VERSION}-${BUILD_VERSION}..."
 
 # Download upstream source tarball (shared .orig.tar.gz across all distributions)
 if [ ! -f "$ORIG_TARBALL" ]; then
@@ -26,10 +26,9 @@ else
 fi
 
 build_source_package() {
-    local dist=$1
-    local FULL_VERSION="${nushell_VERSION}-${BUILD_VERSION}~${dist}"
+    local FULL_VERSION="${nushell_VERSION}-${BUILD_VERSION}~griffo"
 
-    echo "  Building source package for ${dist} (${FULL_VERSION})..."
+    echo "  Building source package ${FULL_VERSION}..."
 
     # Clean and recreate build directory from orig tarball
     rm -rf "$BUILD_DIR"
@@ -39,9 +38,9 @@ build_source_package() {
     # Copy Debian packaging directory
     cp -r debian "$BUILD_DIR/"
 
-    # Generate distribution-specific changelog (overwrites placeholder)
+    # Generate the changelog (overwrites placeholder)
     cat > "$BUILD_DIR/debian/changelog" << EOF
-nushell (${FULL_VERSION}) ${dist}; urgency=medium
+nushell (${FULL_VERSION}) stable; urgency=medium
 
   * New upstream release ${nushell_VERSION}.
 
@@ -56,18 +55,8 @@ EOF
 }
 
 echo ""
-echo "Building Debian source packages..."
-DEBIAN_DISTS=("bookworm" "trixie" "forky" "sid")
-for dist in "${DEBIAN_DISTS[@]}"; do
-    build_source_package "$dist"
-done
-
-echo ""
-echo "Building Ubuntu source packages..."
-UBUNTU_DISTS=("jammy" "noble" "questing" "resolute")
-for dist in "${UBUNTU_DISTS[@]}"; do
-    build_source_package "$dist"
-done
+# One source package for every suite, as with the binaries (see build_debian.sh).
+build_source_package
 
 echo ""
 echo "🎉 Source packages created successfully!"
