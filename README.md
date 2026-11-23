@@ -14,7 +14,7 @@ it is deregistered on removal.
 Packages are built automatically from official upstream releases (usually
 within hours) and served from **[deb.griffo.io](https://deb.griffo.io)** for
 Debian (bookworm, trixie, forky, sid) and Ubuntu (jammy, noble, questing,
-resolute) on amd64, arm64, armhf and riscv64.
+resolute, stonking) on amd64, arm64, armhf and riscv64.
 
 ## Install
 
